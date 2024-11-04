@@ -20,43 +20,23 @@ state_abbreviations = {
 
 # Step 1: Download and prepare the CDC obesity data
 url_obesity = "https://www.cdc.gov/obesity/media/files/2024/09/2023-Obesity-by-state.csv"
-try:
-    response_obesity = requests.get(url_obesity)
-    response_obesity.raise_for_status()  # Ensure request was successful
-    with open("2023-Obesity-by-state.csv", "wb") as file:
-        file.write(response_obesity.content)
-except requests.exceptions.RequestException as e:
-    print(f"Error downloading CDC obesity data: {e}")
+response_obesity = requests.get(url_obesity)
+response_obesity.raise_for_status()  # Ensure request was successful
+with open("2023-Obesity-by-state.csv", "wb") as file:
+    file.write(response_obesity.content)
 
-# Load and clean the CDC obesity data
 cdc_data = pd.read_csv("2023-Obesity-by-state.csv")
-cdc_data.columns = cdc_data.columns.str.strip()  # Remove whitespace from column names
+cdc_data.columns = cdc_data.columns.str.strip()
 cdc_data = cdc_data.rename(columns={"State": "state", "Prevalence": "obesity_rate"})
-cdc_data["state"] = cdc_data["state"].str.strip().map(state_abbreviations)
+cdc_data["state"] = cdc_data["state"].map(state_abbreviations)
 cdc_data["obesity_rate"] = pd.to_numeric(cdc_data["obesity_rate"], errors="coerce")
 
-# Step 2: Create the first choropleth map for obesity rates
-fig = px.choropleth(
-    cdc_data,
-    locations="state",
-    locationmode="USA-states",
-    color="obesity_rate",
-    color_continuous_scale=["blue", "lightblue", "yellow", "orange", "red"],  # Explicit blue-to-red scale
-    scope="usa",
-    title="Adult Obesity Prevalence by State (2023) - Source CDC.org"
-)
-fig.show()
-
-# Step 3: Download and prepare the state integrity data
+# Step 2: Download and prepare the state integrity data
 url_integrity = "https://cloudfront-files-1.publicintegrity.org/apps/2015/10/stateintegrity/0.1.35/data/overview.json"
-try:
-    response_integrity = requests.get(url_integrity)
-    response_integrity.raise_for_status()
-    data = response_integrity.json()
-except requests.exceptions.RequestException as e:
-    print(f"Error downloading state integrity data: {e}")
+response_integrity = requests.get(url_integrity)
+response_integrity.raise_for_status()
+data = response_integrity.json()
 
-# Process the integrity data
 state_data = []
 for state in data['states']:
     state_name = state['name']
@@ -68,45 +48,58 @@ for state in data['states']:
 integrity_df = pd.DataFrame(state_data)
 integrity_df["integrity_score"] = pd.to_numeric(integrity_df["integrity_score"], errors="coerce")
 
-# Step 4: Create the second choropleth map with darker colors for lower integrity scores
-fig = px.choropleth(
+# Step 3: Merge the datasets
+merged_data = pd.merge(cdc_data, integrity_df, on="state", how="inner").dropna(subset=["obesity_rate", "integrity_score"])
+
+# Step 4: Calculate overall correlation
+correlation, p_value = pearsonr(merged_data["obesity_rate"], merged_data["integrity_score"])
+print(f"Correlation between obesity rate and integrity score: {correlation:.2f}")
+print(f"P-value of the correlation: {p_value:.4f}")
+
+if p_value < 0.05:
+    print("The correlation is statistically significant at the 95% confidence level.")
+else:
+    print("The correlation is not statistically significant at the 95% confidence level.")
+
+# Step 5: Create the first plot (obesity rate by state)
+fig1 = px.choropleth(
+    cdc_data,
+    locations="state",
+    locationmode="USA-states",
+    color="obesity_rate",
+    color_continuous_scale=["blue", "lightblue", "yellow", "orange", "red"],
+    scope="usa",
+    title="Adult Obesity Prevalence by State (2023) - Source CDC.org"
+)
+fig1.write_image("obesity_prevalence_map_2023.png", width=1024, height=768)
+
+# Step 6: Create the second plot (integrity score by state)
+fig2 = px.choropleth(
     integrity_df,
     locations='state',
     locationmode='USA-states',
     color='integrity_score',
-    color_continuous_scale='Blues_r',  # Use the reversed 'Blues' scale for lack of integrity
+    color_continuous_scale='Blues_r',
     scope='usa',
     title='State Integrity Scores by State (Darker = Lower Integrity) - Source publicintegrity.org'
 )
-fig.show()
+fig2.write_image("state_integrity_map.png", width=1024, height=768)
 
-# Step 5: Merge the two datasets on state abbreviation
-merged_data = pd.merge(cdc_data, integrity_df, on="state", how="inner").dropna(subset=["obesity_rate", "integrity_score"])
+# Step 7: Calculate a normalized composite metric for visualization
+merged_data["combined_metric"] = (merged_data["obesity_rate"] + (100 - merged_data["integrity_score"])) / 200  # Normalize between 0 and 1
 
-# Step 6: Calculate the correlation between obesity rate and integrity score with significance testing
-if not merged_data.empty:
-    correlation, p_value = pearsonr(merged_data["obesity_rate"], merged_data["integrity_score"])
-    print(f"Correlation between obesity rate and integrity score: {correlation:.2f}")
-    print(f"P-value of the correlation: {p_value:.4f}")
-
-    # Step 7: Check if the correlation is statistically significant at the 95% confidence level
-    if p_value < 0.05:
-        print("The correlation is statistically significant at the 95% confidence level.")
-    else:
-        print("The correlation is not statistically significant at the 95% confidence level.")
-else:
-    print("Merged data is empty after cleaning. Cannot calculate correlation.")
-
-# Step 8: Create the third choropleth map for integrity score and obesity rate correlation
-fig = px.choropleth(
+# Step 8: Create the third plot showing the normalized composite metric
+fig3 = px.choropleth(
     merged_data,
     locations="state",
     locationmode="USA-states",
-    color="integrity_score",
-    hover_data={"obesity_rate": True, "integrity_score": True},
-    color_continuous_scale="Reds",
+    color="combined_metric",
+    color_continuous_scale="Purples",
+    range_color=(0, 1),  # Ensures color scale goes from 0 to 1
     scope="usa",
-    title=f"Correlation of Obesity Rate and Integrity Score by State\n"
-          f"(Darker Red = Higher Corruption and Obesity Correlation)"
+    title="Normalized Composite Metric of Obesity Rate and Integrity Score (0 to 1 Scale)"
 )
-fig.show()
+fig3.write_image("normalized_composite_metric_map.png", width=1024, height=768)
+
+print("All plots have been saved as PNG files.")
+
