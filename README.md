@@ -8,7 +8,7 @@ This Python script analyzes the correlation between state-level obesity rates (2
 
 ![](obesity_prevalence_map.png)
 ![](state_integrity_map.png)
-![](composite_metric_map.png)
+![](normalized_composite_metric_map.png)
 
 ## Results
 
