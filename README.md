@@ -6,6 +6,18 @@
 
 This Python script analyzes the correlation between state-level obesity rates (2023 CDC data) and political integrity scores (2015 data from the Center for Public Integrity). The goal is to investigate whether there is a statistical relationship between these two variables.
 
+![](obesity_prevalence_map.png)
+![](state_integrity_map.png)
+![](obesity_vs_integrity_correlation_map.png)
+
+Add files via upload
+now
+obesity_vs_integrity_correlation_map.png
+Add files via upload
+now
+state_integrity_map.png
+
+
 ## Data Sources
 
 1. **Obesity Rates by State (2023)**: [Downloaded from the CDC's website.](https://www.cdc.gov/obesity/media/files/2024/09/2023-Obesity-by-state.csv)
