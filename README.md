@@ -8,8 +8,8 @@ This Python script analyzes the correlation between state-level obesity rates (2
 
 ## Data Sources
 
-1. **Obesity Rates by State (2023)**: Downloaded from the CDC's website.
-2. **State Integrity Scores (2015)**: Retrieved from the Center for Public Integrity's JSON data.
+1. **Obesity Rates by State (2023)**: [Downloaded from the CDC's website.](https://www.cdc.gov/obesity/media/files/2024/09/2023-Obesity-by-state.csv)
+2. **State Integrity Scores (2015)**: Retrieved from the (Center for Public Integrity's JSON data.)[https://cloudfront-files-1.publicintegrity.org/apps/2015/10/stateintegrity/0.1.35/data/overview.json]
 
 ## Analysis Overview
 
