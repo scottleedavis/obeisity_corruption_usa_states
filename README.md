@@ -10,13 +10,12 @@ This Python script analyzes the correlation between state-level obesity rates (2
 ![](state_integrity_map.png)
 ![](obesity_vs_integrity_correlation_map.png)
 
-Add files via upload
-now
-obesity_vs_integrity_correlation_map.png
-Add files via upload
-now
-state_integrity_map.png
+## Results
 
+- **Correlation Coefficient**: -0.22
+- **P-value**: 0.1416
+
+The results show a weak negative correlation that is **not statistically significant** at the 95% confidence level (p > 0.05). This indicates that there is no meaningful association between obesity rates and political integrity scores by state.
 
 ## Data Sources
 
@@ -39,12 +38,7 @@ state_integrity_map.png
    - Calculates the Pearson correlation coefficient between obesity rates and integrity scores.
    - Tests the significance of the correlation to determine if the relationship is statistically meaningful.
 
-## Results
 
-- **Correlation Coefficient**: -0.22
-- **P-value**: 0.1416
-
-The results show a weak negative correlation that is **not statistically significant** at the 95% confidence level (p > 0.05). This indicates that there is no meaningful association between obesity rates and political integrity scores by state.
 
 ## Requirements
 
